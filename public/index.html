@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Animepahe API - Node.js</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .endpoint {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎬 Animepahe API (Node.js)</h1>
+    <p>Welcome to the Node.js version of the Animepahe scraper API!</p>
+    
+    <div class="endpoint">
+        <h3>Health Check</h3>
+        <p><a href="/health"><code>GET /health</code></a></p>
+        <p>Check if the API is running</p>
+    </div>
+
+    <div class="endpoint">
+        <h3>Search Anime</h3>
+        <p><a href="/search?q=naruto"><code>GET /search?q=naruto</code></a></p>
+        <p>Search for anime by title</p>
+    </div>
+
+    <div class="endpoint">
+        <h3>Get Episodes</h3>
+        <p><code>GET /episodes?session=anime-session-id</code></p>
+        <p>Get all episodes for an anime (requires session ID from search)</p>
+    </div>
+
+    <div class="endpoint">
+        <h3>Get Sources</h3>
+        <p><code>GET /sources?anime_session=xxx&episode_session=yyy</code></p>
+        <p>Get streaming sources for an episode</p>
+    </div>
+
+    <div class="endpoint">
+        <h3>Resolve M3U8</h3>
+        <p><code>GET /m3u8?url=kwik-url</code></p>
+        <p>Resolve Kwik URL to M3U8 streaming URL</p>
+    </div>
+
+    <div class="endpoint">
+        <h3>🎥 Proxy Stream (Use this for video playback!)</h3>
+        <p><code>GET /proxy?url=m3u8-or-ts-url</code></p>
+        <p><strong>Important:</strong> Use this endpoint to stream videos through the server. This bypasses CORS and referrer restrictions.</p>
+        <p><strong>Usage:</strong></p>
+        <ol>
+            <li>Get M3U8 URL from <code>/m3u8</code> endpoint</li>
+            <li>Use <code>/proxy?url=&lt;m3u8-url&gt;</code> in your video player</li>
+            <li>The proxy will handle all video segments automatically</li>
+        </ol>
+    </div>
+
+    <hr>
+    <p><strong>🎥 <a href="/player.html">Try the Video Player Demo</a></strong></p>
+    <p><small>Powered by Node.js + Express</small></p>
+</body>
+</html>

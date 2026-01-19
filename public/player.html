@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Player Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 3px;
+            margin: 20px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #0066cc;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0052a3;
+        }
+        button.secondary {
+            background: #6c757d;
+        }
+        button.secondary:hover {
+            background: #5a6268;
+        }
+        video {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+            background: #000;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        #status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 3px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .loading { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🎬 Video Player (HLS.js)</h1>
+    
+    <div class="container">
+        <div class="warning">
+            <strong>⚠️ Important:</strong> The CDN uses Cloudflare protection. The <code>/proxy</code> endpoint won't work. 
+            This player uses <strong>HLS.js</strong> to play M3U8 URLs directly in your browser.
+        </div>
+
+        <div class="info">
+            <strong>How to use:</strong>
+            <ol>
+                <li>Get the M3U8 URL from the <code>/m3u8</code> endpoint</li>
+                <li>Paste it below</li>
+                <li>Click "Load Video" - it will play directly (no proxy needed!)</li>
+            </ol>
+        </div>
+
+        <label for="m3u8Url"><strong>M3U8 URL:</strong></label>
+        <input 
+            type="text" 
+            id="m3u8Url" 
+            placeholder="https://example.com/video.m3u8"
+        />
+        
+        <button onclick="loadVideo()">Load Video (Direct)</button>
+        <button class="secondary" onclick="loadWithProxy()">Try with Proxy (may fail)</button>
+
+        <video id="videoPlayer" controls></video>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        let hls = null;
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = type;
+        }
+
+        function loadVideo() {
+            const m3u8Url = document.getElementById('m3u8Url').value;
+            const video = document.getElementById('videoPlayer');
+
+            if (!m3u8Url) {
+                showStatus('Please enter an M3U8 URL', 'error');
+                return;
+            }
+
+            showStatus('Loading video with HLS.js...', 'loading');
+
+            // Clean up previous instance
+            if (hls) {
+                hls.destroy();
+            }
+
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    debug: false,
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 90
+                });
+
+                hls.loadSource(m3u8Url);
+                hls.attachMedia(video);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    showStatus('✅ Video loaded successfully! Click play to watch.', 'success');
+                    video.play().catch(e => {
+                        showStatus('Video loaded. Click play button to start.', 'success');
+                    });
+                });
+
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    if (data.fatal) {
+                        showStatus(`❌ Error: ${data.type} - ${data.details}. Try using a CORS browser extension.`, 'error');
+                        console.error('HLS error:', data);
+                    }
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // Native HLS support (Safari)
+                video.src = m3u8Url;
+                video.addEventListener('loadedmetadata', function() {
+                    showStatus('✅ Video loaded successfully!', 'success');
+                });
+                video.addEventListener('error', function() {
+                    showStatus('❌ Error loading video. Try using a CORS browser extension.', 'error');
+                });
+            } else {
+                showStatus('❌ Your browser does not support HLS playback.', 'error');
+            }
+        }
+
+        function loadWithProxy() {
+            const m3u8Url = document.getElementById('m3u8Url').value;
+            const video = document.getElementById('videoPlayer');
+
+            if (!m3u8Url) {
+                showStatus('Please enter an M3U8 URL', 'error');
+                return;
+            }
+
+            showStatus('Trying with proxy (this may fail with Cloudflare-protected CDNs)...', 'loading');
+
+            // Clean up previous instance
+            if (hls) {
+                hls.destroy();
+                hls = null;
+            }
+
+            const proxiedUrl = `/proxy?url=${encodeURIComponent(m3u8Url)}`;
+            
+            if (Hls.isSupported()) {
+                hls = new Hls();
+                hls.loadSource(proxiedUrl);
+                hls.attachMedia(video);
+
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    showStatus('✅ Proxy worked! Video loaded.', 'success');
+                });
+
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    if (data.fatal) {
+                        showStatus(`❌ Proxy failed: ${data.details}. Use "Load Video (Direct)" instead.`, 'error');
+                    }
+                });
+            } else {
+                video.src = proxiedUrl;
+                video.onloadeddata = () => showStatus('✅ Video loaded!', 'success');
+                video.onerror = () => showStatus('❌ Proxy failed. Use "Load Video (Direct)" instead.', 'error');
+            }
+        }
+
+        // Allow Enter key to load video
+        document.getElementById('m3u8Url').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadVideo();
+            }
+        });
+    </script>
+</body>
+</html>
