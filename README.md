@@ -134,9 +134,5 @@ Output:
 }
 ```
 
-## 🔗 After Deployment
 
-1. You'll get a URL like: `https://your-project.vercel.app`
-
-## 🎉 You're Ready!
 
