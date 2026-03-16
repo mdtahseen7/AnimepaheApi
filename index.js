@@ -23,6 +23,7 @@ app.get('/', (req, res) => {
       search: '/search?q=naruto',
       episodes: '/episodes?session=anime-session-id',
       sources: '/sources?anime_session=xxx&episode_session=yyy',
+      ids: '/ids?session=anime-session-id (returns AniList and MyAnimeList IDs)',
       m3u8: '/m3u8?url=kwik-url (returns m3u8 URL with required referer)',
       proxy: '/proxy?url=m3u8-or-ts-url&referer=kwik-referer (Use this to play videos)',
       health: '/health'
@@ -80,6 +81,20 @@ app.get('/sources', async (req, res) => {
     res.json(sources);
   } catch (error) {
     console.error('Sources error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/ids', async (req, res) => {
+  try {
+    const { session } = req.query;
+    if (!session) {
+      return res.status(400).json({ error: 'Query parameter "session" is required' });
+    }
+    const ids = await pahe.getIds(session);
+    res.json(ids);
+  } catch (error) {
+    console.error('IDs error:', error);
     res.status(500).json({ error: error.message });
   }
 });
